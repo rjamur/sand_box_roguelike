@@ -1,104 +1,111 @@
 import pgzrun
 import random
 
-# Configurações da janela
+# -----------------------------
+# CONFIGURAÇÃO DA JANELA
+# -----------------------------
 WIDTH = 800
 HEIGHT = 600
-TITLE = "Movimentação e Animação do Peão - Turn Automático e Random"
+TITLE = "Turn Automático Alternado"
 
-# === ANIMAÇÃO DE WALK (movimento) ===
-# Para cada direção, os 7 frames estão em:
-# images/pawn/pawn_down, pawn_left, pawn_right, pawn_up
+# -----------------------------
+# ANIMAÇÃO DE WALK
+# (Pastas: images/pawn/pawn_down, pawn_left, pawn_right, pawn_up)
+# Cada uma com 7 frames (00 a 06)
+# -----------------------------
 sprites = {}
 directions = ["down", "left", "right", "up"]
-for direction in directions:
-    # Cada lista contém os 7 frames, com nomes no padrão: 00_pawn_direction.png ... 06_pawn_direction.png
-    sprites[direction] = [f"pawn/pawn_{direction}/{i:02d}_pawn_{direction}" for i in range(7)]
+for d in directions:
+    sprites[d] = [f"pawn/pawn_{d}/{i:02d}_pawn_{d}" for i in range(7)]
 
-# === ANIMAÇÃO DE TURN ===
-# Dois conjuntos:
-#  "forward": frames 00 a 11 (normal: inicia em 00 e termina em 11 => olhando para frente)
-#  "backward": frames 12 a 23 (normal: inicia em 12 e termina em 23 => olhando para trás)
-turn_forward = [f"pawn/pawn_turn/{i:02d}_pawn_turn" for i in range(12)]
-turn_backward = [f"pawn/pawn_turn/{i:02d}_pawn_turn" for i in range(12, 24)]
+# -----------------------------
+# ANIMAÇÃO DE TURN
+# (Pasta: images/pawn/pawn_turn)
+# Conjunto forward: frames 00 a 11 (idle ideal: frame 11)
+# Conjunto backward: frames 12 a 23 (idle ideal: frame 23)
+# -----------------------------
+forward_seq = [f"pawn/pawn_turn/{i:02d}_pawn_turn" for i in range(0, 12)]
+backward_seq = [f"pawn/pawn_turn/{i:02d}_pawn_turn" for i in range(12, 24)]
 
-# Variáveis globais de controle:
-current_direction = "down"   # direção para o walk
-current_frame = 0            # frame atual do walk
-moving = False               # flag: está se movendo?
+# Variáveis de controle do walk:
+current_direction = "down"
+current_frame = 0
+moving = False
 
-# Variáveis de turn (virada)
-turning = False              # flag: está executando a animação de turn?
-turn_frame = 0               # índice do frame atual na animação de turn
-turn_timer = 3               # tempo de inatividade para iniciar o automatic turn (em segundos)
+# Variáveis de controle do turn:
+turning = False     # True enquanto a animação turn estiver ativa
+turn_frame = 0      # índice atual na sequência de turn
+turn_timer = 3      # tempo de inatividade (em s) para disparar o turn automático
 
-# Variáveis para controlar a alternância do turn:
-last_turn_type = None        # "forward" ou "backward" – último modo utilizado
-current_turn_type = None     # modo (forward/backward) escolhido para o turn atual
-current_turn_frames = None   # lista de frames escolhida para o turn atual
+# Orientação idle atual:
+# "forward" significa que, idle, o personagem usa o forward_seq (idle = frame 11)
+# "backward" significa idle = frame 23
+idle_turn = "forward"  
+# Durante a animação, usaremos current_turn_frames e armazenaremos em next_idle o novo estado
+current_turn_frames = []
+next_idle = None
 
-# Cria o ator com o sprite inicial da direção "down",
-# posicionado no centro da tela.
+# Cria o ator com o sprite inicial do walk da direção "down"
 pawn = Actor(sprites[current_direction][0], center=(WIDTH // 2, HEIGHT // 2))
 
-# ---------------------------------------------------------------------------- #
-# Função de animação de walk (movimento) – se estiver se movendo e não estiver turnando.
+# -----------------------------
+# FUNÇÃO: animação do walk (quando se move)
+# -----------------------------
 def animate_sprite():
     global current_frame, pawn
     if moving and not turning:
         current_frame = (current_frame + 1) % len(sprites[current_direction])
         pawn.image = sprites[current_direction][current_frame]
 
-# ---------------------------------------------------------------------------- #
-# Função que atualiza a animação de turn (quando estiver sendo executada).
+# -----------------------------
+# FUNÇÃO: atualiza o turn (avança a sequência de turn)
+# -----------------------------
 def update_turn():
-    global turning, turn_frame, pawn, turn_timer, last_turn_type, current_turn_frames, current_turn_type
+    global turning, turn_frame, pawn, turn_timer, idle_turn, current_turn_frames, next_idle
     if turning:
         turn_frame += 1
         if turn_frame < len(current_turn_frames):
             pawn.image = current_turn_frames[turn_frame]
         else:
-            # Turn finalizado – atualiza o último tipo
-            last_turn_type = current_turn_type
-            # Fim do turn; reinicia variáveis
+            # O turn terminou; atualiza o estado idle com base na escolha
             turning = False
             turn_frame = 0
             turn_timer = 3
-            # Depois, mostra o frame "parado" de walk na direção atual.
-            pawn.image = sprites[current_direction][0]
+            idle_turn = next_idle
+            # Define o sprite idle conforme o novo estado:
+            if idle_turn == "forward":
+                pawn.image = forward_seq[-1]  # último frame (frame 11)
+            else:
+                pawn.image = backward_seq[-1] # último frame (frame 23)
 
-# ---------------------------------------------------------------------------- #
-# Função que inicia o turn automaticamente, quando o personagem estiver parado.
+# -----------------------------
+# FUNÇÃO: dispara o turn automático
+# -----------------------------
 def automatic_turn():
-    global turning, turn_frame, current_turn_frames, current_turn_type, last_turn_type
+    global turning, turn_frame, current_turn_frames, idle_turn, next_idle, pawn
     if not moving and not turning:
         turning = True
         turn_frame = 0
-        # Decide o modo de turn: se last_turn_type == "forward", desta vez usará "backward",
-        # senão, usará "forward". Se for a primeira vez, escolhe aleatoriamente.
-        if last_turn_type is None:
-            current_turn_type = random.choice(["forward", "backward"])
+        # Se o estado atual idle for "forward", queremos mudar para "backward"
+        if idle_turn == "forward":
+            # Escolhe aleatoriamente ordem ascendente ou descendente para os backward:
+            if random.choice([True, False]):
+                current_turn_frames = backward_seq[:]       # ordem ascendente: 12, 13, ..., 23
+            else:
+                current_turn_frames = list(reversed(backward_seq))  # ordem descendente: 23, 22, ..., 12
+            next_idle = "backward"
         else:
-            current_turn_type = "backward" if last_turn_type == "forward" else "forward"
-        # Seleciona os frames de acordo com o tipo
-        if current_turn_type == "forward":
-            frames_list = turn_forward[:]  # copia
-        else:
-            frames_list = turn_backward[:]
-        # Randomicamente escolher se vai reproduzir em ordem ascendente ou descendente.
-        if random.choice([True, False]):
-            # Ordem ascendente (mantém)
-            current_turn_frames = frames_list
-        else:
-            # Ordem descendente: porém, queremos que o frame final seja o mesmo que o normal.
-            # Por exemplo, se for forward, normalmente termina em 11; se invertido, o primeiro elemento é 11.
-            # Então, usamos a lista invertida.
-            current_turn_frames = list(reversed(frames_list))
-        # Define o sprite inicial do turn.
+            # idle_turn == "backward": queremos mudar para "forward"
+            if random.choice([True, False]):
+                current_turn_frames = forward_seq[:]        # 0, 1, ..., 11
+            else:
+                current_turn_frames = list(reversed(forward_seq))   # 11, 10, ..., 0
+            next_idle = "forward"
         pawn.image = current_turn_frames[0]
 
-# ---------------------------------------------------------------------------- #
-# Função que checa o timer para iniciar o turn automático.
+# -----------------------------
+# FUNÇÃO: checa o timer para turn automático
+# -----------------------------
 def check_turn_timer():
     global turn_timer
     if not moving and not turning:
@@ -106,14 +113,13 @@ def check_turn_timer():
         if turn_timer <= 0:
             automatic_turn()
 
-# ---------------------------------------------------------------------------- #
-# Função update: processa o input do teclado e atualiza a posição.
+# -----------------------------
+# FUNÇÃO update(): processa o input e movimentação
+# -----------------------------
 def update():
     global current_direction, moving, pawn, turn_timer, current_frame, turning
     speed = 3
-    moving = False  # reinicia estado de movimento
-
-    # Se não estiver no meio do turn, processa as setas:
+    moving = False
     if not turning:
         if keyboard.left:
             current_direction = "left"
@@ -131,26 +137,29 @@ def update():
             current_direction = "down"
             pawn.y += speed
             moving = True
-
-    # Se estiver se movendo, reseta o turn_timer (caso esteja parado anteriormente)
+    # Se houver movimento, reinicia o timer do turn
     if moving:
         turn_timer = 3
-
-    # Se estiver parado e não turnando, garante o sprite parado da direção atual.
+    # Se estiver parado e não turnando, mostra o sprite idle de walk.
     if not moving and not turning:
-        current_frame = 0
-        pawn.image = sprites[current_direction][0]
+        # Aqui escolhemos o idle conforme o estado atual
+        if idle_turn == "forward":
+            pawn.image = forward_seq[-1]  # frame 11
+        else:
+            pawn.image = backward_seq[-1] # frame 23
 
-# ---------------------------------------------------------------------------- #
-# Função draw: desenha o ator na tela.
+# -----------------------------
+# FUNÇÃO draw(): desenha o ator na tela
+# -----------------------------
 def draw():
     screen.clear()
     pawn.draw()
 
-# ---------------------------------------------------------------------------- #
-# Agenda as funções de animação/checagem:
-clock.schedule_interval(animate_sprite, 0.1)   # anima walk
-clock.schedule_interval(update_turn, 0.1)      # atualiza turn (se ativo)
-clock.schedule_interval(check_turn_timer, 0.1)   # checa o timer para turn automático
+# -----------------------------
+# Agenda as funções com clock.schedule_interval
+# -----------------------------
+clock.schedule_interval(animate_sprite, 0.1)   # anima o walk
+clock.schedule_interval(update_turn, 0.1)      # atualiza o turn se estiver ativo
+clock.schedule_interval(check_turn_timer, 0.1)   # verifica o timer para iniciar o turn
 
 pgzrun.go()
