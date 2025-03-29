@@ -1,53 +1,47 @@
 from PIL import Image
-import math
+import os
 
-def is_green(pixel, target=(0, 255, 0), tolerance=50):
+def remove_background_color(input_path, output_path, tolerance=30):
     """
-    Verifica se um pixel é próximo do verde definido em 'target'.
-    
-    Parâmetros:
-      pixel: Uma tupla (r, g, b, a) do pixel.
-      target: A cor verde alvo (padrão (0, 255, 0)).
-      tolerance: A distância máxima permitida (em valor absoluto) para considerar que o pixel é verde.
-    """
-    r, g, b, a = pixel
-    dr = r - target[0]
-    dg = g - target[1]
-    db = b - target[2]
-    distance = math.sqrt(dr**2 + dg**2 + db**2)
-    return distance < tolerance
-
-def remove_green_background(input_path, output_path, target_green=(0, 255, 0), tolerance=50):
-    """
-    Abre a imagem, substitui os pixels cujo tom é próximo do verde (target_green)
-    por pixels totalmente transparentes, e salva o resultado.
+    Abre a imagem de input_path, obtém a cor do primeiro pixel (canto superior esquerdo)
+    e transforma em transparente todos os pixels que forem similares a essa cor (dentro da tolerância).
     
     Parâmetros:
       input_path: Caminho para a imagem de entrada.
       output_path: Caminho para salvar a imagem com fundo transparente.
-      target_green: A cor verde que desejamos remover (padrão (0, 255, 0)).
-      tolerance: Tolerância para considerar variações do verde.
+      tolerance: Valor máximo para a diferença entre os canais (R,G,B) do pixel e da cor de fundo.
     """
-    # Abre a imagem e garante que ela esteja no modo RGBA
+    # Abre a imagem e converte para o modo RGBA para garantir a presença do canal alpha
     img = Image.open(input_path).convert("RGBA")
-    pixels = img.getdata()
-    new_pixels = []
     
-    # Percorre cada pixel; se for verde (dentro da tolerância), torna-o transparente
-    for pixel in pixels:
-        if is_green(pixel, target_green, tolerance):
-            new_pixels.append((pixel[0], pixel[1], pixel[2], 0))
+    # Obtém a cor do primeiro pixel (assumindo ser o fundo verde)
+    bg_color = img.getpixel((0, 0))
+    print("Cor de fundo detectada:", bg_color)
+    
+    new_data = []
+    # Processa cada pixel da imagem
+    for pixel in img.getdata():
+        r, g, b, a = pixel
+        # Se a diferença entre o pixel atual e a cor de fundo for menor que a tolerância para cada canal
+        if abs(r - bg_color[0]) < tolerance and abs(g - bg_color[1]) < tolerance and abs(b - bg_color[2]) < tolerance:
+            # Define o pixel como transparente (alpha = 0)
+            new_data.append((r, g, b, 0))
         else:
-            new_pixels.append(pixel)
-            
-    img.putdata(new_pixels)
+            new_data.append((r, g, b, a))
+    
+    # Atualiza a imagem com os novos dados e salva
+    img.putdata(new_data)
     img.save(output_path)
-    print("Imagem convertida salva em:", output_path)
+    print("Imagem salva com fundo transparente em:", output_path)
 
 if __name__ == "__main__":
-    # Altere 'input_image.png' para o caminho da sua imagem e defina o nome de saída.
-    input_image = "images/sprite_sheet.png"
-    output_image = "images/sprite_sheet_transparent.png"
+    # Pasta de origem das imagens (ajuste conforme necessário)
+    images_folder = "images"
+    input_filename = "sprite_sheet.png"  # Nome da sua imagem de origem
+    output_filename = "sprite_sheet_transparent.png"
     
-    # Chama a função; ajuste a tolerância se necessário
-    remove_green_background(input_image, output_image, target_green=(0, 255, 0), tolerance=50)
+    input_path = os.path.join(images_folder, input_filename)
+    output_path = os.path.join(images_folder, output_filename)
+    
+    # Executa a função de remoção do fundo (ajuste a tolerância se necessário)
+    remove_background_color(input_path, output_path, tolerance=30)

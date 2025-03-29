@@ -63,7 +63,7 @@ def extract_red_walk_u_sprites(image_path, output_folder,
 
 if __name__ == "__main__":
     # Caminho para a sprite sheet – ajuste conforme necessário.
-    image_path = "sprite_sheet.png"
+    image_path = "images/sprite_sheet_transparent.png"
     # Pasta de saída para os sprites extraídos.
     output_folder = "output_sprites"
     
