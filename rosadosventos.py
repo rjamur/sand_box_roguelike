@@ -1,5 +1,8 @@
 import pgzrun
 import random
+import pygame 
+# !!!! atenção depois retirar
+# usando só para aumentar os sprites no teste
 
 # -----------------------------
 # CONFIGURAÇÃO DA JANELA
@@ -47,6 +50,25 @@ next_idle = None
 
 # Cria o ator com o sprite inicial do walk da direção "down"
 pawn = Actor(sprites[current_direction][0], center=(WIDTH // 2, HEIGHT // 2))
+
+def scale_sprite(actor, scale_factor):
+    """
+    Altera o tamanho do sprite de um Actor.
+    
+    Parâmetros:
+      actor: O objeto Actor cujo tamanho será alterado.
+      scale_factor: Fator de escala (por exemplo, 2.0 dobra o tamanho).
+    """
+    original_surface = actor._surf  # Superfície original
+    new_width = int(original_surface.get_width() * scale_factor)
+    new_height = int(original_surface.get_height() * scale_factor)
+    
+    # Cria uma nova superfície escalada
+    scaled_surface = pygame.transform.scale(original_surface, (new_width, new_height))
+    actor._surf = scaled_surface  # Substitui a superfície interna do Actor
+    actor._rect = scaled_surface.get_rect(center=actor.pos)  # Atualiza o retângulo de colisão
+
+scale_sprite(pawn, 3.0)
 
 # -----------------------------
 # FUNÇÃO: animação do walk (quando se move)
