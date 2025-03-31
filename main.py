@@ -5,7 +5,7 @@ import pgzrun
 from pgzero.keyboard import keys, keyboard
 
 from game_entities import ActiveHero
-from chess_pieces import Piece, ActivePiece, ThinkingPiece
+from chess_pieces import Piece, ActivePiece, ThinkingPiece, MovingPiece, PieceAndante
 from fight_manager import Fight
 from menu import Menu
 import config
@@ -31,8 +31,8 @@ active_pieces = [
 pieces = [
     ThinkingPiece(WIDTH // 2, HEIGHT // 2 - 270, 'pawn'),
     ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
-    ThinkingPiece(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
-    ThinkingPiece(WIDTH // 2, HEIGHT // 2 - 60, 'knight')
+    PieceAndante(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
+    PieceAndante(WIDTH // 2, HEIGHT // 2 - 60, 'knight', 'down')
 ]
 
 active_piece_index = 0

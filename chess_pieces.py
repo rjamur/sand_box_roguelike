@@ -175,7 +175,10 @@ class MovingPiece(Piece):
 class PieceAndante(Piece):
     def __init__(self, x, y, kind, initial_direction="left"):
         super().__init__(x, y, kind, initial_direction)
-        self.direction = "horizontal"  # Pode ser "horizontal" ou "vertical"
+        if initial_direction in ("left", "right"):
+            self.direction = "horizontal"  # Pode ser "horizontal" ou "vertical"
+        else:
+            self.direction = "vertical"
         self.moving_forward = True
 
     def update_position(self, speed):
@@ -184,19 +187,23 @@ class PieceAndante(Piece):
         if self.direction == "horizontal":
             if self.moving_forward:
                 self.actor.x += speed
+                self.current_direction = "right"   # Atualiza para 'right' se movendo para a direita
                 if self.actor.x > 800:  # Limite à direita
                     self.moving_forward = False
             else:
                 self.actor.x -= speed
+                self.current_direction = "left"    # Atualiza para 'left' se movendo para a esquerda
                 if self.actor.x < 0:  # Limite à esquerda
                     self.moving_forward = True
         elif self.direction == "vertical":
             if self.moving_forward:
                 self.actor.y += speed
+                self.current_direction = "down"   # Atualiza para 'down' se movendo para baixo
                 if self.actor.y > 600:  # Limite inferior
                     self.moving_forward = False
             else:
                 self.actor.y -= speed
+                self.current_direction = "up"     # Atualiza para 'up' se movendo para cima
                 if self.actor.y < 0:  # Limite superior
                     self.moving_forward = True
 
