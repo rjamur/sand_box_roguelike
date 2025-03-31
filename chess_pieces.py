@@ -22,6 +22,8 @@ class Piece(Player):
         self.current_frame = 0
         self.actor = Actor(self.sprites[initial_direction][0], center=(x, y))
         self.moving = False
+        self.kind = kind
+        self.active = True
 
         # Turn animation configuration.
         self.turning = False        # True while turn animation is active.
@@ -112,7 +114,8 @@ class Piece(Player):
         pass
 
     def draw(self):
-        self.actor.draw()
+        if self.active:
+            self.actor.draw()
 
 class ActivePiece(Piece):
     def __init__(self, x, y, kind, initial_direction="down"): #, name: str = "Piece" ):
