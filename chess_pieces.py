@@ -21,6 +21,14 @@ class Piece(Player):
         print(self.sprites)
         self.actor = Actor(self.sprites[initial_direction][0], center=(x, y))
 
+        # Configura uma sequência idle mais dinâmica – use os 2 últimos frames (por exemplo)
+        self.idle_sprites = {
+            d: self.sprites[d][-2:] for d in ["down", "left", "right", "up"]
+        }
+        # Contador e índice para a animação ociosa
+        self.idle_counter = 0
+        self.idle_frame_index = 0
+
     def draw(self):
         """Desenha a peça no tabuleiro."""
         if self.active:
@@ -45,15 +53,25 @@ class Piece(Player):
                 self.actor.image = self.sprites[self.current_direction][self.current_frame]
 
     def update_idle(self):
-        """Atualiza o sprite para o estado ocioso."""
-        idle_frame = self.sprites[self.current_direction][-1]  # Último frame da direção
-        self.actor.image = idle_frame
+        """
+        Atualiza o sprite para o estado ocioso com animação dinâmica.
+        Aqui, o idle alterna entre os sprites definidos em self.idle_sprites.
+        Pode simular respiração, piscar ou outro efeito sutil.
+        """
+        # Incrementa o contador de frames para animação idle
+        self.idle_counter += 1
+        # Por exemplo, a cada 20 frames o idle troca de sprite
+        if self.idle_counter % 20 == 0:
+            self.idle_frame_index = (self.idle_frame_index + 1) % len(self.idle_sprites[self.current_direction])
+        # Atualiza a imagem para o frame idle corrente
+        self.actor.image = self.idle_sprites[self.current_direction][self.idle_frame_index]     
 
-
+# As demais classes herdam de Piece e podem ou usar update_idle conforme necessário:
 class StaticPiece(Piece):
     def update_position(self, speed):
-        """Peça parada, não atualiza posição nem animação."""
-        pass
+        """Peça parada, usa apenas o update_idle para animação ociosa dinâmica."""
+        self.moving = False
+        self.update_idle()
 
 class ThinkingPiece(Piece):
     def __init__(self, x, y, kind, initial_direction="down"):
@@ -210,3 +228,5 @@ class ActivePiece(Piece):
             self.animate_sprite()
         else:
             self.update_idle()
+
+# Outras classes, como ThinkingPiece, MovingPiece e PieceAndante, podem manter ou sobrescrever se necessário.            
