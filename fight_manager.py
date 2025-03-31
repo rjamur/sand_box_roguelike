@@ -1,6 +1,7 @@
 import os
 from pgzero.actor import Actor
 from pgzero.clock import schedule_interval, unschedule  # Para agendamento e cancelamento de tarefas
+import config
 
 # Caminho base da pasta 'images'
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))  # Diretório do fight_manager.py
@@ -51,21 +52,21 @@ class Fight(Actor):
 
     def resolve_fight(self):
         """Define o vencedor e atualiza o estado do jogo."""
-        pieces.remove(self.loser)  # Remove a peça derrotada
+        #pieces.remove(self.loser)  # Remove a peça derrotada
         self.winner.active = True  # Reativa o vencedor
         print(f"{self.winner.kind} venceu {self.loser.kind}!")
 
     def draw(self):
         """Desenha o Actor da luta."""
         if self.active:
-            self.actor.draw()
+            pass
 
 def start_fight(piece1, piece2):
-    global current_fight
     folder = f"fights/{piece1.kind}_vs_{piece2.kind}"
 
-    current_fight = Fight(piece1, piece2, folder)
+    config.current_fight = Fight(piece1, piece2, folder)
 
+    print(config.current_fight)
     #piece1.active = False
     #piece2.active = False
 
@@ -85,8 +86,6 @@ def animate_fight(fight_folder, winner, loser):
     schedule_interval(update_frame, 0.1)
 
 def finalize_fight(piece1, piece2):
-    global pieces
-
     piece1.active = True
     piece2.active = True
     #print(f"{winner.kind} venceu {loser.kind}!")

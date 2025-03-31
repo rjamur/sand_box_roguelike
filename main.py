@@ -6,9 +6,10 @@ import os
 from pgzero.keyboard import keys, keyboard
 
 from game_entities import ActiveHero
-from chess_pieces import Piece, ActivePiece
-from fight_manager import start_fight, animate_fight, finalize_fight
+from chess_pieces import Piece, ActivePiece, ThinkingPiece
+from fight_manager import start_fight, animate_fight, finalize_fight, Fight
 from menu import Menu
+import config
 
 # Inicializa o menu
 menu = Menu()
@@ -16,7 +17,7 @@ game_active = False  # Variável para indicar que o jogo está ativo
 WIDTH = 800
 HEIGHT = 600
 TITLE = "Automatic Alternated Turn"
-current_fight = False
+config.current_fight = None
 
 # -----------------------------
 # OBJECT INSTANCES
@@ -29,8 +30,8 @@ active_pieces = [
 ]
 
 pieces = [
-    Piece(WIDTH // 2, HEIGHT // 2 - 270, 'pawn'),
-    Piece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
+    ThinkingPiece(WIDTH // 2, HEIGHT // 2 - 270, 'pawn'),
+    ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
     #Piece(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
     #Piece(WIDTH // 2, HEIGHT // 2 - 60, 'knight')
 ]
@@ -40,14 +41,16 @@ active_piece = active_pieces[active_piece_index]
 
 switch_delay = 0
 
+peao = active_pieces[0]
+torre = active_pieces[1]
+#luta = Fight(peao,torre)
+
 # ------------ Fight ---------------------
 #
 # -----------------------------
 # Detecta colisão e inicia luta
 # -----------------------------
 def check_collisions():
-    global active_piece, pieces, current_fight
-
     for piece in pieces:
         if active_piece.actor.colliderect(piece.actor):  # Verifica se há colisão
             start_fight(active_piece, piece)
@@ -56,7 +59,8 @@ def check_collisions():
 # Atualiza o estado global no update()
 # -----------------------------
 def update():
-    global active_piece, active_piece_index, switch_delay, current_fight
+    global active_piece, active_piece_index, switch_delay
+
     dt = 1/60
 
     if keyboard.tab and switch_delay <= 0:
@@ -67,18 +71,25 @@ def update():
         switch_delay -= dt
 
     # Atualizar posição do jogador ativo
-    active_piece.update_position(speed = 3)
+    #active_piece.update_position(speed = 3)
 
-    if current_fight and current_fight.active:
-        current_fight.update()
+    if config.current_fight and config.current_fight.active:
+        config.current_fight.update()
     else:
         # Verifica colisões apenas se não houver luta em andamento
         check_collisions()
-        active_piece.update_position(speed=3)
+        active_piece.update_position(speed=2)
 
     # Atualizações automáticas para as peças não controladas
     for piece in pieces:
         piece.animate_sprite()
+    def animate_sprite(self):
+        """Anima o sprite da peça durante o movimento."""
+        if self.moving:  # Verifica se está se movendo
+            self.current_frame = (
+                self.current_frame + 1
+            ) % len(self.sprites[self.current_direction])  # Loop nos frames
+            self.actor.image = self.sprites[self.current_direction][self.current_frame]
 
 # -----------------------------
 # Scheduled functions using clock.schedule_interval.
@@ -98,17 +109,17 @@ def turn_all():
     for piece in pieces:
         piece.update_turn()
 
-def timer_all():
-    for piece in active_pieces:
-        piece.check_turn_timer()
-
-    for piece in pieces:
-        piece.check_turn_timer()
+#def timer_all():
+#    for piece in active_pieces:
+#        piece.check_turn_timer()
+#
+#    for piece in pieces:
+#        piece.check_turn_timer()
 
 # Agendamento único para todas as peças
 clock.schedule_interval(animate_all, 0.1)
 clock.schedule_interval(turn_all, 0.1)
-clock.schedule_interval(timer_all, 0.1)
+#clock.schedule_interval(timer_all, 0.1)
 
 # -----------------------------
 # GLOBAL FUNCTION: draw()
@@ -129,7 +140,7 @@ def draw():
         piece.draw()
 
     # Desenha a luta, se houver
-    if current_fight and current_fight.active:
-        current_fight.draw()
+    if config.current_fight and config.current_fight.active:
+        config.current_fight.draw()
 
 pgzrun.go()
