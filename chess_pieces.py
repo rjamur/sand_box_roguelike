@@ -3,6 +3,48 @@ from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
 from game_entities import Player
 
+import os
+
+def load_direction_sprites(kind, direction):
+    """
+    Procura uma subpasta em 'images/<kind>' cujo nome contenha o 'direction'
+    (ex.: "left", "right", "up" ou "down") e carrega todos os arquivos .png
+    dessa pasta, ordenados alfabeticamente.
+    Retorna uma lista de caminhos relativos (ex.: "bishop/bishop_left/00.png").
+    """
+    # Define o caminho base para a pasta de sprites da peça
+    base_dir = os.path.join("images", kind)
+    
+    if not os.path.exists(base_dir):
+        print(f"A pasta base {base_dir} não existe!")
+        return []
+    
+    # Lista todas as subpastas que contenham a string direction (ignorando maiúsculas/minúsculas)
+    subdirs = [
+        d for d in os.listdir(base_dir)
+        if os.path.isdir(os.path.join(base_dir, d)) and (direction.lower() in d.lower())
+    ]
+    print(subdirs)
+    
+    if not subdirs:
+        print(f"Nenhuma subpasta encontrada para a direção '{direction}' em '{kind}'.")
+        return []
+    
+    # Escolhe a primeira subpasta encontrada (ou pode ser feita uma seleção mais sofisticada)
+    chosen_subdir = subdirs[0]
+    sprites_folder = os.path.join(base_dir, chosen_subdir)
+    print(sprites_folder)
+    
+    # Lista todos os arquivos .png em sprites_folder e ordena-os alfabeticamente
+    files = sorted([f for f in os.listdir(sprites_folder) if f.lower().endswith(".png")])
+    print(files)
+    
+    # Monta os caminhos relativos (por exemplo, "bishop/bishop_left/00.png")
+    sprite_paths = [os.path.join(kind, chosen_subdir, f) for f in files]
+    print(sprite_paths)
+    return sprite_paths
+
+
 class Piece(Player):
     def __init__(self, x, y, kind, initial_direction="down"):
         self.x = x
@@ -13,12 +55,17 @@ class Piece(Player):
         self.moving = False
         self.active = True
 
-        folder = kind
-        self.sprites = {
-            d: [f"{folder}/{folder}_{d}/{i:02d}_{folder}_{d}" for i in range(7)]
-            for d in ["down", "left", "right", "up"]
-        }
-        print(self.sprites)
+        # 'kind' determina a pasta em images e usamos a função auxiliar para cada direção.
+        self.sprites = {}
+        for d in ["down", "left", "right", "up"]:
+            self.sprites[d] = load_direction_sprites(kind, d)
+            if not self.sprites[d]:
+                print(f"Atenção: Nenhum sprite encontrado para a direção '{d}' de '{kind}'.")
+        
+        # Define o sprite inicial; caso não haja sprites para a direção inicial, define como uma string vazia.
+        initial_sprite = self.sprites[initial_direction][0] if self.sprites.get(initial_direction) else ""
+        self.actor = Actor(initial_sprite, center=(x, y))
+
         self.actor = Actor(self.sprites[initial_direction][0], center=(x, y))
 
         # Configura uma sequência idle mais dinâmica – use os 2 últimos frames (por exemplo)
