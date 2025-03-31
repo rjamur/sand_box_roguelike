@@ -1,12 +1,13 @@
 import random
 from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
+from game_entities import Player
 
 # -----------------------------
 # BASE CLASS: Piece
 # This class includes common walk and turn animations.
 # -----------------------------
-class Piece:
+class Piece(Player):
     def __init__(self, x, y, initial_direction="down"):
         #super().__init__(x, y, initial_direction)
         # Walk animation: each direction has 7 frames.
@@ -32,11 +33,12 @@ class Piece:
         # Turn sequences:
         # forward: frames 00 to 11 (idle frame is 11).
         self.forward_seq = [
-            f"{folder}/{folder}_turn/{i:02d}_{folder}_turn" for i in range(0, 12)
+            f"{folder}/{folder}_turn/{i:02d}_{folder}_turn" for i in range(0, 3)
         ]
+        # !!!! TODO: range de acordo com os sprites da pasta
         # backward: frames 12 to 23 (idle frame is 23).
         self.backward_seq = [
-            f"{folder}/{folder}_turn/{i:02d}_{folder}_turn" for i in range(12, 24)
+            f"{folder}/{folder}_turn/{i:02d}_{folder}_turn" for i in range(4, 6)
         ]
 
     def animate_sprite(self):
@@ -112,8 +114,9 @@ class Piece:
         self.actor.draw()
 
 class ActivePiece(Piece):
-    def __init__(self, x, y, initial_direction="down"):
+    def __init__(self, x, y, name: str = "Piece", initial_direction="down"):
         super().__init__(x, y, initial_direction)
+        self.name = name
 
     def update_position(self, speed):
         """Update the hero's position based on keyboard input if not turning."""
@@ -141,22 +144,19 @@ class ActivePiece(Piece):
         else:
             self.update_idle()
 
-# -----------------------------
-# BASE CLASS: Pawn
-# This class includes common walk and turn animations.
-# -----------------------------
+
 class Pawn(ActivePiece):#(ActiveHero):
     def __init__(self, x, y, initial_direction="down"):
         super().__init__(x, y, initial_direction)
 
-class Knight(Piece):#(ActiveHero):
+class Knight(ActivePiece):#(ActiveHero):
     def __init__(self, x, y, initial_direction="down"):
         super().__init__(x, y, initial_direction)
 
-class Queen(Piece):#(ActiveHero):
+class Queen(ActivePiece):#(ActiveHero):
     def __init__(self, x, y, initial_direction="down"):
         super().__init__(x, y, initial_direction)
 
-class Rook(Piece):#(ActiveHero):
+class Rook(ActivePiece):#(ActiveHero):
     def __init__(self, x, y, initial_direction="down"):
         super().__init__(x, y, initial_direction)

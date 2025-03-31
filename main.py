@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import random
 import pgzrun
-from pgzero.keyboard import keys
+from pgzero.keyboard import keys, keyboard
 from menu import Menu
 from game_entities import ActiveHero
 from chess_pieces import Pawn, Rook, Queen, Knight
@@ -14,55 +14,62 @@ WIDTH = 800
 HEIGHT = 600
 TITLE = "Automatic Alternated Turn"
 
-
 # -----------------------------
 # OBJECT INSTANCES
 # -----------------------------
-pawn = Pawn(WIDTH // 2, HEIGHT // 2)
-rook = Rook(WIDTH // 2 + 30, HEIGHT // 2)
+pieces = [
+    Pawn(WIDTH // 2, HEIGHT // 2),
+    Rook(WIDTH // 2 + 30, HEIGHT // 2),
+    Queen(WIDTH // 2 - 30, HEIGHT // 2),
+    Knight(WIDTH // 2, HEIGHT // 2 - 30)
+]
+
+active_piece_index = 0
+active_piece = pieces[active_piece_index]
+
+switch_delay = 0
 
 # -----------------------------
 # GLOBAL FUNCTION: update()
 # Called automatically by pgzrun every frame.
 # -----------------------------
 def update():
-    speed = 3
-    pawn.update_position(speed)
-    rook.update_position(speed)
+    global active_piece, active_piece_index, switch_delay
+    dt = 1/60
 
+    if keyboard.tab and switch_delay <= 0:
+        active_piece_index = (active_piece_index + 1) % len(pieces)
+        active_piece = pieces[active_piece_index]
+        switch_delay = 0.3
+    if switch_delay > 0:
+        switch_delay -= dt
+
+    active_piece.update(dt)
+
+    speed = 3
+    for piece in pieces:
+        piece.update_position(speed)
 
 # -----------------------------
 # Scheduled functions using clock.schedule_interval.
-# They periodically call animation, turn, and timer methods.
+# Chamam periodicamente os métodos de animação, turno e timer para todas as peças.
 # -----------------------------
-def pawn_animate():
-    pawn.animate_sprite()
+def animate_all():
+    for piece in pieces:
+        piece.animate_sprite()
 
-def pawn_turn():
-    pawn.update_turn()
+def turn_all():
+    for piece in pieces:
+        piece.update_turn()
 
-def pawn_timer():
-    pawn.check_turn_timer()
+def timer_all():
+    for piece in pieces:
+        piece.check_turn_timer()
 
-def rook_animate():
-    rook.animate_sprite()
-
-def rook_turn():
-    rook.update_turn()
-
-def rook_timer():
-    rook.check_turn_timer()
-
-
-# Scheduling for the active hero.
-clock.schedule_interval(pawn_animate, 0.1)   # animate hero's walk
-clock.schedule_interval(pawn_turn, 0.1)      # update hero's turn if active
-clock.schedule_interval(pawn_timer, 0.1)     # check timer for hero's turn
-
-clock.schedule_interval(rook_animate, 0.1)   # animate hero's walk
-clock.schedule_interval(rook_turn, 0.1)      # update hero's turn if active
-clock.schedule_interval(rook_timer, 0.1)     # check timer for hero's turn
-
+# Agendamento único para todas as peças
+clock.schedule_interval(animate_all, 0.1)
+clock.schedule_interval(turn_all, 0.1)
+clock.schedule_interval(timer_all, 0.1)
 
 # -----------------------------
 # GLOBAL FUNCTION: draw()
@@ -70,11 +77,12 @@ clock.schedule_interval(rook_timer, 0.1)     # check timer for hero's turn
 # -----------------------------
 def draw():
     screen.clear()
-    pawn.draw()
-    rook.draw()
+    active_piece.draw()
+    #
+    screen.draw.text(f"Ativo: {active_piece.name}", center=(400, 50), fontsize=30, color="yellow")
+    for piece in pieces:
+        piece.draw()
 
-    #adversary.draw()
-    #queen_piece.draw()
 
 
 pgzrun.go()
