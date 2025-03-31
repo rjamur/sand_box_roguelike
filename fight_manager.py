@@ -1,92 +1,120 @@
 import os
 from pgzero.actor import Actor
-from pgzero.clock import schedule_interval, unschedule  # Para agendamento e cancelamento de tarefas
-import config
+from pgzero.clock import schedule_interval, unschedule
 
-# Caminho base da pasta 'images'
-BASE_PATH = os.path.abspath(os.path.dirname(__file__))  # Diretório do fight_manager.py
-IMAGES_PATH = os.path.join(BASE_PATH, "images")  # Sobe um nível para encontrar 'images'
+# Pasta padrão se não existir a pasta dos lutadores desejada
+DEFAULT_FIGHT_FOLDER = "fights/pawn_vs_rook"
 
 def load_fight_frames(fight_folder):
-    # Define o caminho completo para a pasta de lutas
-    path = os.path.join(IMAGES_PATH, fight_folder)
-    if not os.path.exists(path):
-        print(f"Pasta {fight_folder} não encontrada. Usando 'pawn_vs_rook' como padrão.")
-        fight_folder = "fights/pawn_vs_rook"  # Define a pasta padrão
-        path = os.path.join(IMAGES_PATH, fight_folder)
-
-    # Lista os arquivos no diretório
-    all_files = os.listdir(path)
+    """
+    Carrega os sprites da luta a partir da pasta de sprites.
+    Se a pasta informada não existir, usa a pasta DEFAULT_FIGHT_FOLDER.
+    """
+    # Define o caminho base para a pasta "images"
+    base_images_path = os.path.join("images")
+    # Constrói o caminho completo para a pasta de lutas
+    full_path = os.path.join(base_images_path, fight_folder)
+    
+    if not os.path.exists(full_path):
+        print(f"Pasta '{fight_folder}' não encontrada. Usando '{DEFAULT_FIGHT_FOLDER}' como padrão.")
+        fight_folder = DEFAULT_FIGHT_FOLDER
+        full_path = os.path.join(base_images_path, fight_folder)
+    
+    # Lista e filtra os arquivos (assumindo extensão .png)
+    all_files = os.listdir(full_path)
     fight_frames = sorted(
         [f"{fight_folder}/{file}" for file in all_files if file.endswith(".png")]
     )
-
+    
+    if not fight_frames:
+        print("Nenhum sprite encontrado na pasta! Verifique os arquivos na pasta:", full_path)
+    
     return fight_frames
 
-class Fight(Actor):
-    def __init__(self, winner, loser, fight_folder):
-        # Calcula a posição central entre os dois atores
-        center_x = (winner.actor.x + loser.actor.x) // 2
-        center_y = (winner.actor.y + loser.actor.y) // 2
-
-        # Carrega os frames da luta
-        self.frames = load_fight_frames(fight_folder)
-        self.frame_index = 0
-        self.active = True  # Indica que a luta está em andamento
-
-        # Inicializa como um Actor no centro
-        super().__init__(self.frames[0], center=(center_x, center_y))
-
+class Fight:
+    def __init__(self, winner, loser):
+        """
+        Inicializa uma luta entre winner e loser.
+        Define a pasta de sprites com base nas peças e utiliza um fallback se necessário.
+        """
         self.winner = winner
         self.loser = loser
+        self.active = True
+        self.current_frame = 0
+        self.animation_counter = 0
 
-    def update(self):
-        """Atualiza os frames da luta."""
-        if self.active:
-            self.frame_index += 1
-            if self.frame_index < len(self.frames):
-                self.image = self.frames[self.frame_index]  # Atualiza o frame
-            else:
-                self.active = False  # Termina a luta
-                self.resolve_fight()
+        # Define o nome da pasta com base nos atributos dos lutadores.
+        folder = f"fights/{winner.kind}_vs_{loser.kind}"
+        self.frames = load_fight_frames(folder)
+        
+        # Define a posição central com base na posição dos atores.
+        self.actor = Actor(self.frames[0], center=self._get_center_position())
+        
+        # Suporte para funcionalidades futuras:
+        # Se o loser não tiver atributo "health", define um padrão (ex.: 100)
+        if not hasattr(self.loser, "health"):
+            self.loser.health = 100
+
+    def _get_center_position(self):
+        """Calcula a posição central entre os dois lutadores."""
+        x = (self.winner.actor.x + self.loser.actor.x) // 2
+        y = (self.winner.actor.y + self.loser.actor.y) // 2
+        return (x, y)
+
+    def animate_sprite(self):
+        """
+        Atualiza os sprites da luta.
+        O método percorre os frames da animação, controlado por um contador.
+        No final de cada ciclo, há espaço para aplicar efeitos (como dano gradual).
+        """
+        self.animation_counter += 1
+        # Ajuste a velocidade da animação modificando o valor '5'
+        if self.animation_counter % 5 == 0:
+            self.current_frame = (self.current_frame + 1) % len(self.frames)
+            self.actor.image = self.frames[self.current_frame]
+            
+            # Se atingiu o último frame, podemos aplicar efeitos adicionais.
+            if self.current_frame == len(self.frames) - 1:
+                self.apply_damage()
+                self.check_fight_status()
+
+    def apply_damage(self):
+        """
+        Aplica dano gradual à peça perdedora.
+        Este método pode ser aprimorado com lógicas mais complexas futuramente.
+        """
+        damage = 10  # Valor de dano por ciclo (ajuste conforme necessário)
+        self.loser.health -= damage
+        print(f"{self.loser.kind} recebeu {damage} de dano. Energia restante: {self.loser.health}")
+
+    def check_fight_status(self):
+        """
+        Verifica se a luta deve continuar ou terminar,
+        baseado na energia (health) do perdedor.
+        """
+        if self.loser.health <= 0:
+            print(f"{self.winner.kind} venceu a luta!")
+            self.active = False
+            self.resolve_fight()
 
     def resolve_fight(self):
-        """Define o vencedor e atualiza o estado do jogo."""
-        #pieces.remove(self.loser)  # Remove a peça derrotada
-        self.winner.active = True  # Reativa o vencedor
-        print(f"{self.winner.kind} venceu {self.loser.kind}!")
+        """
+        Define o término da luta.
+        Futuramente pode incluir remoção da peça, transição de estados, etc.
+        """
+        # Exemplo: removendo a peça perdedora de uma lista global 'pieces'
+        try:
+            pieces.remove(self.loser)
+        except NameError:
+            print("A variável global 'pieces' não está definida.")
+        print(f"A luta terminou. {self.loser.kind} foi derrotado!")
+
+    def update(self):
+        """Atualiza a animação da luta se ela estiver ativa."""
+        if self.active:
+            self.animate_sprite()
 
     def draw(self):
-        """Desenha o Actor da luta."""
+        """Desenha a animação da luta na tela."""
         if self.active:
-            pass
-
-def start_fight(piece1, piece2):
-    folder = f"fights/{piece1.kind}_vs_{piece2.kind}"
-
-    config.current_fight = Fight(piece1, piece2, folder)
-
-    print(config.current_fight)
-    #piece1.active = False
-    #piece2.active = False
-
-def animate_fight(fight_folder, winner, loser):
-    fight_frames = load_fight_frames(fight_folder)
-    frame_index = [0]
-
-    def update_frame():
-        if frame_index[0] < len(fight_frames):
-            winner.actor.image = fight_frames[frame_index[0]]
-            loser.actor.image = fight_frames[frame_index[0]]
-            frame_index[0] += 1
-        else:
-            unschedule(update_frame)
-            finalize_fight(winner, loser)
-
-    schedule_interval(update_frame, 0.1)
-
-def finalize_fight(piece1, piece2):
-    piece1.active = True
-    piece2.active = True
-    #print(f"{winner.kind} venceu {loser.kind}!")
-
+            self.actor.draw()

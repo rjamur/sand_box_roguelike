@@ -7,7 +7,7 @@ from pgzero.keyboard import keys, keyboard
 
 from game_entities import ActiveHero
 from chess_pieces import Piece, ActivePiece, ThinkingPiece
-from fight_manager import start_fight, animate_fight, finalize_fight, Fight
+from fight_manager import Fight
 from menu import Menu
 import config
 
@@ -43,7 +43,7 @@ switch_delay = 0
 
 peao = active_pieces[0]
 torre = active_pieces[1]
-#luta = Fight(peao,torre)
+current_fight = Fight(peao,torre)
 
 # ------------ Fight ---------------------
 #
@@ -70,19 +70,15 @@ def update():
     if switch_delay > 0:
         switch_delay -= dt
 
-    # Atualizar posição do jogador ativo
-    #active_piece.update_position(speed = 3)
+    if current_fight.active:
+        current_fight.update()
 
-    if config.current_fight and config.current_fight.active:
-        config.current_fight.update()
-    else:
-        # Verifica colisões apenas se não houver luta em andamento
-        check_collisions()
-        active_piece.update_position(speed=2)
+    active_piece.update_position(speed=2)
 
     # Atualizações automáticas para as peças não controladas
     for piece in pieces:
         piece.animate_sprite()
+    
     def animate_sprite(self):
         """Anima o sprite da peça durante o movimento."""
         if self.moving:  # Verifica se está se movendo
@@ -109,17 +105,17 @@ def turn_all():
     for piece in pieces:
         piece.update_turn()
 
-#def timer_all():
-#    for piece in active_pieces:
-#        piece.check_turn_timer()
-#
-#    for piece in pieces:
-#        piece.check_turn_timer()
+def timer_all():
+    for piece in active_pieces:
+        piece.check_turn_timer()
+
+    for piece in pieces:
+        piece.check_turn_timer()
 
 # Agendamento único para todas as peças
 clock.schedule_interval(animate_all, 0.1)
 clock.schedule_interval(turn_all, 0.1)
-#clock.schedule_interval(timer_all, 0.1)
+clock.schedule_interval(timer_all, 0.1)
 
 # -----------------------------
 # GLOBAL FUNCTION: draw()
@@ -140,7 +136,7 @@ def draw():
         piece.draw()
 
     # Desenha a luta, se houver
-    if config.current_fight and config.current_fight.active:
-        config.current_fight.draw()
+    if current_fight.active:
+        current_fight.draw()
 
 pgzrun.go()
