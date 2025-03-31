@@ -4,7 +4,7 @@ import pgzrun
 from pgzero.keyboard import keys, keyboard
 from menu import Menu
 from game_entities import ActiveHero
-from chess_pieces import Pawn, Rook, Queen, Knight
+from chess_pieces import Piece, ActivePiece
 
 # Inicializa o menu
 menu = Menu()
@@ -17,15 +17,22 @@ TITLE = "Automatic Alternated Turn"
 # -----------------------------
 # OBJECT INSTANCES
 # -----------------------------
+active_pieces = [
+    ActivePiece(WIDTH // 2, HEIGHT // 2, 'pawn'),
+    ActivePiece(WIDTH // 2 + 30, HEIGHT // 2, 'rook'),
+    ActivePiece(WIDTH // 2 - 30, HEIGHT // 2, 'queen'),
+    ActivePiece(WIDTH // 2, HEIGHT // 2 - 30, 'knight')
+]
+
 pieces = [
-    Pawn(WIDTH // 2, HEIGHT // 2),
-    Rook(WIDTH // 2 + 30, HEIGHT // 2),
-    Queen(WIDTH // 2 - 30, HEIGHT // 2),
-    Knight(WIDTH // 2, HEIGHT // 2 - 30)
+    Piece(WIDTH // 2 + 60, HEIGHT // 2 + 30, 'pawn'),
+    Piece(WIDTH // 2 + 120, HEIGHT // 2, 'rook'),
+    Piece(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
+    Piece(WIDTH // 2, HEIGHT // 2 - 60, 'knight')
 ]
 
 active_piece_index = 0
-active_piece = pieces[active_piece_index]
+active_piece = active_pieces[active_piece_index]
 
 switch_delay = 0
 
@@ -38,31 +45,41 @@ def update():
     dt = 1/60
 
     if keyboard.tab and switch_delay <= 0:
-        active_piece_index = (active_piece_index + 1) % len(pieces)
-        active_piece = pieces[active_piece_index]
+        active_piece_index = (active_piece_index + 1) % len(active_pieces)
+        active_piece = active_pieces[active_piece_index]
         switch_delay = 0.3
     if switch_delay > 0:
         switch_delay -= dt
 
-    active_piece.update(dt)
+    # Atualizar posição do jogador ativo
+    active_piece.update_position(speed = 3)
 
-    speed = 3
+    # Atualizações automáticas para as peças não controladas
     for piece in pieces:
-        piece.update_position(speed)
+        piece.animate_sprite()
 
 # -----------------------------
 # Scheduled functions using clock.schedule_interval.
 # Chamam periodicamente os métodos de animação, turno e timer para todas as peças.
 # -----------------------------
 def animate_all():
+    for piece in active_pieces:
+        piece.animate_sprite()
+
     for piece in pieces:
         piece.animate_sprite()
 
 def turn_all():
+    for piece in active_pieces:
+        piece.update_turn()
+
     for piece in pieces:
         piece.update_turn()
 
 def timer_all():
+    for piece in active_pieces:
+        piece.check_turn_timer()
+
     for piece in pieces:
         piece.check_turn_timer()
 
@@ -77,9 +94,15 @@ clock.schedule_interval(timer_all, 0.1)
 # -----------------------------
 def draw():
     screen.clear()
-    active_piece.draw()
-    #
-    screen.draw.text(f"Ativo: {active_piece.name}", center=(400, 50), fontsize=30, color="yellow")
+
+    # Informações na tela
+    screen.draw.text(f"Ativo: {active_piece.kind}", center=(400, 50), fontsize=30, color="yellow")
+
+    # Desenha as peças ativas
+    for piece in active_pieces:
+        piece.draw()
+
+    # Desenha as peças não controladas
     for piece in pieces:
         piece.draw()
 

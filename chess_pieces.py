@@ -8,11 +8,12 @@ from game_entities import Player
 # This class includes common walk and turn animations.
 # -----------------------------
 class Piece(Player):
-    def __init__(self, x, y, initial_direction="down"):
-        #super().__init__(x, y, initial_direction)
+    def __init__(self, x, y, kind, initial_direction="down"):
+        # super().__init__(x, y, initial_direction)
         # Walk animation: each direction has 7 frames.
         self.directions = ["down", "left", "right", "up"]
-        folder = self.__class__.__name__.lower()
+        self.kind = kind
+        folder = kind
         self.sprites = {
             d: [f"{folder}/{folder}_{d}/{i:02d}_{folder}_{d}" for i in range(7)]
             for d in self.directions
@@ -114,9 +115,9 @@ class Piece(Player):
         self.actor.draw()
 
 class ActivePiece(Piece):
-    def __init__(self, x, y, name: str = "Piece", initial_direction="down"):
-        super().__init__(x, y, initial_direction)
-        self.name = name
+    def __init__(self, x, y, kind, initial_direction="down"): #, name: str = "Piece" ):
+        super().__init__(x, y, kind, initial_direction)
+        #self.name = name
 
     def update_position(self, speed):
         """Update the hero's position based on keyboard input if not turning."""
@@ -144,19 +145,3 @@ class ActivePiece(Piece):
         else:
             self.update_idle()
 
-
-class Pawn(ActivePiece):#(ActiveHero):
-    def __init__(self, x, y, initial_direction="down"):
-        super().__init__(x, y, initial_direction)
-
-class Knight(ActivePiece):#(ActiveHero):
-    def __init__(self, x, y, initial_direction="down"):
-        super().__init__(x, y, initial_direction)
-
-class Queen(ActivePiece):#(ActiveHero):
-    def __init__(self, x, y, initial_direction="down"):
-        super().__init__(x, y, initial_direction)
-
-class Rook(ActivePiece):#(ActiveHero):
-    def __init__(self, x, y, initial_direction="down"):
-        super().__init__(x, y, initial_direction)
