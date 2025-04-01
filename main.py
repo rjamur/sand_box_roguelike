@@ -49,29 +49,29 @@ print("Sala inicial escolhida:", initial_key)
 # --------------------------------
 active_pieces = [
     ActivePiece(WIDTH // 2, HEIGHT // 2 + 170, 'pawn'),
-    #ActivePiece(WIDTH // 2 + 270, HEIGHT // 2, 'rook'),
-    #ActivePiece(WIDTH // 2 - 30, HEIGHT // 2, 'queen'),
-    #ActivePiece(WIDTH // 2, HEIGHT // 2 - 30, 'knight'),
-    #ActivePiece(WIDTH // 2, HEIGHT // 2 - 70, 'bishop'),
+    ActivePiece(WIDTH // 2 + 270, HEIGHT // 2, 'rook'),
+    ActivePiece(WIDTH // 2 - 30, HEIGHT // 2, 'queen'),
+    ActivePiece(WIDTH // 2, HEIGHT // 2 - 30, 'knight'),
+    ActivePiece(WIDTH // 2, HEIGHT // 2 - 70, 'bishop'),
 ]
 
 pieces = [
-    #ThinkingPiece(WIDTH // 2 - 30, HEIGHT // 2 - 170, 'pawn'),
-    #ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
+    ThinkingPiece(WIDTH // 2 - 30, HEIGHT // 2 - 170, 'pawn'),
+    ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
     PieceAndante(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
-    #PieceAndante(WIDTH // 2, HEIGHT // 2 - 60, 'knight', 'down'),
-    #Piece(WIDTH // 2, HEIGHT // 2 + 40, 'bishop'),
+    PieceAndante(WIDTH // 2, HEIGHT // 2 - 60, 'knight', 'down'),
+    Piece(WIDTH // 2, HEIGHT // 2 + 40, 'bishop'),
 ]
 
 active_piece_index = 0
 active_piece = active_pieces[active_piece_index]
 switch_delay = 0
 
-#peao = active_pieces[0]
-#torre = pieces[1]
-#bispo1 = active_pieces[4]
-#bispo2 = pieces[4]
-#current_fight = Fight(peao,torre)
+peao = active_pieces[0]
+torre = pieces[1]
+bispo1 = active_pieces[4]
+bispo2 = pieces[4]
+current_fight = Fight(peao,torre)
 
 # --- Variáveis de transição ---
 transition_active = False      # Flag indicando se uma transição está em andamento
