@@ -17,6 +17,7 @@ from fight_manager import Fight
 from menu import Menu
 import config
 from hall_manager import Hall
+from map_manager import MapManager
 
 # Inicializa o menu
 menu = Menu(music)
@@ -27,51 +28,48 @@ game_active = False  # Variável para indicar que o jogo está ativo
 WIDTH, HEIGHT = 1280, 704
 
 TITLE = "Correr ou Lutar"
-config.current_fight = None
 
-# Lista de ornamentos disponíveis para muros
-wall_ornaments = ["baum_tile"]
+# Definindo as dimensões da tela com base no tamanho das salas (16 tiles de 64 pixels = 1024, 12 tiles de 64 pixels = 768)
+#WIDTH = 16 * 64   # 1024 pixels
+#HEIGHT = 11 * 64  # 704 pixels
 
-# Configura a primeira sala
-first_hall = Hall(
-    width=20, height=11,  # Tamanho da sala em tiles
-    floor_type="grass",
-    wall_type="brick",
-    doors={"up": True, "down": True, "left": True, "right": True},  # Portas em todos os lados
-    wall_ornaments=wall_ornaments
-)
+# Instancia o MapManager e gera o dicionário de halls (salas)
+map_manager = MapManager(grid_rows=4, grid_cols=4)
+halls = map_manager.build_halls()
 
-first_hall.generate()
+# Seleciona uma sala inicial aleatória
+initial_room_key = random.choice(list(halls.keys()))
+current_room = halls[initial_room_key]
+print("Sala inicial escolhida:", initial_room_key)
 
 # --------------------------------
 # Cria personagens/peças de xadrez
 # --------------------------------
 active_pieces = [
-    ActivePiece(WIDTH // 2, HEIGHT // 2 + 270, 'pawn'),
-    ActivePiece(WIDTH // 2 + 270, HEIGHT // 2, 'rook'),
-    ActivePiece(WIDTH // 2 - 30, HEIGHT // 2, 'queen'),
-    ActivePiece(WIDTH // 2, HEIGHT // 2 - 30, 'knight'),
-    ActivePiece(WIDTH // 2, HEIGHT // 2 - 70, 'bishop'),
+    ActivePiece(WIDTH // 2, HEIGHT // 2 + 170, 'pawn'),
+    #ActivePiece(WIDTH // 2 + 270, HEIGHT // 2, 'rook'),
+    #ActivePiece(WIDTH // 2 - 30, HEIGHT // 2, 'queen'),
+    #ActivePiece(WIDTH // 2, HEIGHT // 2 - 30, 'knight'),
+    #ActivePiece(WIDTH // 2, HEIGHT // 2 - 70, 'bishop'),
 ]
 
 pieces = [
-    ThinkingPiece(WIDTH // 2 - 30, HEIGHT // 2 - 170, 'pawn'),
-    ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
+    #ThinkingPiece(WIDTH // 2 - 30, HEIGHT // 2 - 170, 'pawn'),
+    #ThinkingPiece(WIDTH // 2 - 270, HEIGHT // 2, 'rook'),
     PieceAndante(WIDTH // 2 - 90, HEIGHT // 2, 'queen'),
-    PieceAndante(WIDTH // 2, HEIGHT // 2 - 60, 'knight', 'down'),
-    Piece(WIDTH // 2, HEIGHT // 2 + 40, 'bishop'),
+    #PieceAndante(WIDTH // 2, HEIGHT // 2 - 60, 'knight', 'down'),
+    #Piece(WIDTH // 2, HEIGHT // 2 + 40, 'bishop'),
 ]
 
 active_piece_index = 0
 active_piece = active_pieces[active_piece_index]
-
 switch_delay = 0
 
-peao = active_pieces[0]
-torre = pieces[1]
+#peao = active_pieces[0]
+#torre = pieces[1]
 #bispo1 = active_pieces[4]
 #bispo2 = pieces[4]
-current_fight = Fight(peao,torre)
+#current_fight = Fight(peao,torre)
 
 # -----------------------------
 # Atualiza o estado global no update()
@@ -103,8 +101,8 @@ def update():
         #    bispo2 = pieces[4]
         #    current_fight = Fight(bispo1, bispo2)
 
-        if current_fight.active:
-            current_fight.update()
+        #if current_fight.active:
+        #    current_fight.update()
 
         active_piece.update_position(speed=2)
         # Atualizações das peças ccurrent_fight = Fight(peao,torre)ontroladas
@@ -126,12 +124,13 @@ def draw():
     Desenha e constantemente atualiza tudo na tela
     """
     screen.clear()
-    first_hall.draw(screen)
+
     if menu.active:
         # Desenha o menu
         menu.draw(screen)
     else:
         # Desenha o jogo principal
+        current_room.draw(screen)
         
         # Informações na tela
         screen.draw.text(f"Ativo: {active_piece.kind} - TAB muda para outro - ESC para voltar", center=(400, 50), fontsize=30, color="yellow")
@@ -145,8 +144,8 @@ def draw():
             piece.draw()
 
         # Desenha a luta, se houver
-        if current_fight.active:
-            current_fight.draw()
+        #if current_fight.active:
+        #    current_fight.draw()
 
 def on_mouse_down(pos):
     """Passa o clique do mouse para o menu, caso ele esteja ativo"""
