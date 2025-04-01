@@ -118,7 +118,7 @@ def finish_transition():
     Conclui a transição, definindo a nova sala atual e reposicionando o jogador.
     """
     global transition_active, current_room, current_r, current_c, active_piece, transition_progress
-    global target_room, target_r, target_c, transition_direction, new_pos
+    global target_room, target_r, target_c, transition_direction
 
     transition_active = False
     transition_progress = 0
@@ -150,12 +150,45 @@ def finish_transition():
 # -----------------------------
 # Atualiza o estado global no update()
 # -----------------------------
+
+# Definindo um threshold (valor em pixels) que determina a "zona de ativação" da porta:
+DOOR_THRESHOLD = 50  # ajustável conforme sua preferência
+
 def update():
     """
     Função parte do PGZero que é executada constantemente
     """
     global current_room, current_r, current_c, active_piece, transition_active, transition_progress
     global active_piece, active_piece_index, switch_delay
+
+    # Debug: imprimir posição do herói e o flag de transição
+    print(f"Posição do herói: ({active_piece.x}, {active_piece.y}). transition_active: {transition_active}")
+
+
+
+    # Se não estamos em transição, faz a verificação da posição do herói
+    if not transition_active:
+        # Verifica se há porta habilitada e se o herói está próximo dela
+        # Porta superior
+        if current_room.doors.get("up") and active_piece.y < DOOR_THRESHOLD:
+            initiate_transition("up")
+        # Porta inferior
+        elif current_room.doors.get("down") and active_piece.y > HEIGHT - DOOR_THRESHOLD:
+            initiate_transition("down")
+        # Porta esquerda
+        elif current_room.doors.get("left") and active_piece.x < DOOR_THRESHOLD:
+            initiate_transition("left")
+        # Porta direita
+        elif current_room.doors.get("right") and active_piece.x > WIDTH - DOOR_THRESHOLD:
+            initiate_transition("right")
+            
+    else:
+        # Atualiza o slide de transição conforme já implementado
+        transition_progress += transition_speed
+        total_distance = HEIGHT if transition_direction in ("up", "down") else WIDTH
+        if transition_progress >= total_distance:
+            finish_transition()
+
 
 
     # Se não estamos em transição, permitimos movimentação e verificamos colisões com portas
