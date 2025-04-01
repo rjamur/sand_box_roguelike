@@ -5,10 +5,10 @@ class Hall:
     def __init__(self, width, height, floor_type, wall_type, doors, wall_ornaments, hall_type="room"):
         """
         Parâmetros:
-          width, height: dimensões da sala (em número de tiles). Todas as salas terão o mesmo tamanho, ou seja, o tamanho da tela do jogo.
-          floor_type: nome do arquivo (sem extensão) para o tipo de piso (pasta images/map/floors).
-          wall_type: nome do arquivo (sem extensão) para o tipo de muro (pasta images/map/walls).
-          doors: dicionário indicando em quais paredes há portas (ex.: {"up": True, "down": False, ...}).
+          width, height: dimensões da sala (em número de tiles). Todas as salas terão o mesmo tamanho, ou seja, o tamanho da tela.
+          floor_type: nome do arquivo (sem extensão) para o piso (imagem em images/map/floors).
+          wall_type: nome do arquivo (sem extensão) para o muro (imagem em images/map/walls).
+          doors: dicionário com as direções em que há porta (ex.: {"up": True, "down": False, ...}).
           wall_ornaments: lista com nomes de ornamentos (ex.: ["baum_tile"]).
           hall_type: para este projeto, sempre "room".
         """
@@ -20,10 +20,10 @@ class Hall:
         self.wall_ornaments = wall_ornaments
         self.hall_type = hall_type
 
-        self.tiles = []         # Lista com os tiles do piso
-        self.walls = []         # Lista com os tiles dos muros
+        self.tiles = []         # Lista dos tiles do piso
+        self.walls = []         # Lista dos tiles dos muros
         self.door_actors = []   # Objetos Actor para as portas
-        self.ornaments = []     # Lista com os ornamentos
+        self.ornaments = []     # Lista dos ornamentos
 
     def generate(self):
         # Gera os tiles do piso (cada tile tem 64x64 pixels)
@@ -34,19 +34,19 @@ class Hall:
                     "image": f"map/floors/{self.floor_type}.png",
                     "position": pos
                 })
-        # Gera os muros e adiciona as portas
+        # Gera os muros e portas
         self._generate_walls()
-        # Adiciona ornamentos nas paredes onde não houver porta
+        # Adiciona ornamentos nas paredes onde não há porta
         self._generate_wall_ornaments()
 
     def _generate_walls(self):
         """
-        Cria os muros ao redor da sala. Se houver uma porta em alguma parede, ela será posicionada no centro.
+        Cria os muros na borda da sala. Se houver porta em alguma parede, ela é posicionada no centro.
         """
-        cx = self.width // 2  # Posição central horizontal (em tiles)
-        cy = self.height // 2 # Posição central vertical (em tiles)
+        cx = self.width // 2  # posição central horizontal (em tiles)
+        cy = self.height // 2 # posição central vertical (em tiles)
 
-        # Paredes superiores e inferiores
+        # Paredes superior e inferior
         for x in range(self.width):
             # Linha superior (y = 0)
             pos_top = (x * 64, 0)
@@ -90,24 +90,25 @@ class Hall:
 
     def _add_door(self, door_type, position):
         """
-        Cria um objeto Actor para a porta, centralizado no tile.
+        Cria um objeto Actor para a porta com a imagem correspondente e centraliza-o dentro do tile.
+        Aqui adicionamos uma propriedade extra para guardar a direção (útil para detectar transição).
         """
         door = Actor(f"map/doors/{door_type}.png", (position[0] + 32, position[1] + 32))
         door.anchor = ('center', 'center')
+        door.direction = door_type.split("_")[1]  # Obtém "up", "down", etc.
         self.door_actors.append(door)
 
     def _generate_wall_ornaments(self):
         """
-        Adiciona ornamentos aleatórios aos muros onde não haja porta.
+        Adiciona ornamentos aleatórios aos muros onde não houver porta.
         """
         if not self.wall_ornaments:
             return
 
         for wall in self.walls:
-            # Chance de 50% para adicionar ornamento neste muro
             if random.choice([True, False]):
                 x, y = wall["position"]
-                # Verifica se não existe uma porta na mesma posição
+                # Confirma se não há porta nessa posição
                 door_exists = any(
                     abs(door.x - (x + 32)) < 1 and abs(door.y - (y + 32)) < 1 
                     for door in self.door_actors
@@ -119,16 +120,24 @@ class Hall:
                         "position": (x, y)
                     })
 
-    def draw(self, screen):
+    def draw(self, screen, offset=(0,0)):
+        """
+        Desenha a sala inteira com um deslocamento (offset).  
+        O offset é usado no efeito de transição para posicionar a sala em uma posição deslocada.
+        """
         # Desenha o piso
         for tile in self.tiles:
-            screen.blit(tile["image"], tile["position"])
+            pos = (tile["position"][0] + offset[0], tile["position"][1] + offset[1])
+            screen.blit(tile["image"], pos)
         # Desenha os muros
         for wall in self.walls:
-            screen.blit(wall["image"], wall["position"])
+            pos = (wall["position"][0] + offset[0], wall["position"][1] + offset[1])
+            screen.blit(wall["image"], pos)
         # Desenha os ornamentos
-        for ornament in self.ornaments:
-            screen.blit(ornament["image"], ornament["position"])
+        for orn in self.ornaments:
+            pos = (orn["position"][0] + offset[0], orn["position"][1] + offset[1])
+            screen.blit(orn["image"], pos)
         # Desenha as portas
         for door in self.door_actors:
-            door.draw()
+            door_pos = (door.x + offset[0] - door.width/2, door.y + offset[1] - door.height/2)
+            screen.blit(door.image, door_pos)

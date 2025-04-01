@@ -3,6 +3,7 @@ import random
 from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
 from game_entities import Player
+import config
 
 import os
 
@@ -280,7 +281,7 @@ class ActivePiece(Piece):
         self.moving = False
         if keyboard.left:
             self.current_direction = "left"
-            self.actor.x -= speed
+            self.actor.x = max(64, self.actor.x - speed)
             self.moving = True
         elif keyboard.right:
             self.current_direction = "right"
