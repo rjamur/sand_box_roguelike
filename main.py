@@ -16,16 +16,32 @@ from chess_pieces import Piece, ActivePiece, ThinkingPiece, MovingPiece, PieceAn
 from fight_manager import Fight
 from menu import Menu
 import config
+from hall_manager import Hall
 
 # Inicializa o menu
 menu = Menu(music)
 
 game_active = False  # Variável para indicar que o jogo está ativo
-WIDTH = 1024
-HEIGHT = 768
+
+# Configurações do jogo
+WIDTH, HEIGHT = 1280, 704
+
 TITLE = "Correr ou Lutar"
 config.current_fight = None
-#music.play('background')
+
+# Lista de ornamentos disponíveis para muros
+wall_ornaments = ["baum_tile"]
+
+# Configura a primeira sala
+first_hall = Hall(
+    width=20, height=11,  # Tamanho da sala em tiles
+    floor_type="grass",
+    wall_type="brick",
+    doors={"up": True, "down": True, "left": True, "right": True},  # Portas em todos os lados
+    wall_ornaments=wall_ornaments
+)
+
+first_hall.generate()
 
 # --------------------------------
 # Cria personagens/peças de xadrez
@@ -110,7 +126,7 @@ def draw():
     Desenha e constantemente atualiza tudo na tela
     """
     screen.clear()
-
+    first_hall.draw(screen)
     if menu.active:
         # Desenha o menu
         menu.draw(screen)
