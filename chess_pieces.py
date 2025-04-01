@@ -1,3 +1,4 @@
+"""Implementa peças de xadrez que se movimentam"""
 import random
 from pgzero.actor import Actor
 from pgzero.keyboard import keyboard
@@ -46,6 +47,7 @@ def load_direction_sprites(kind, direction):
 
 
 class Piece(Player):
+    """Classe base para outras classes de peças/personagens"""
     def __init__(self, x, y, kind, initial_direction="down"):
         self.x = x
         self.y = y
@@ -77,7 +79,13 @@ class Piece(Player):
         self.idle_frame_index = 0
 
     def draw(self):
-        """Desenha a peça no tabuleiro."""
+        """
+        Desenha a peça no tabuleiro.
+            
+        Deve ser chamada em draw() do main.py
+        Na prática é chamada constantemente para redesenhar a peça
+
+        """
         if self.active:
             self.actor.draw()
 
@@ -115,12 +123,17 @@ class Piece(Player):
 
 # As demais classes herdam de Piece e podem ou usar update_idle conforme necessário:
 class StaticPiece(Piece):
+    """Peça que não se mexe quando está parada"""
     def update_position(self, speed):
         """Peça parada, usa apenas o update_idle para animação ociosa dinâmica."""
         self.moving = False
         self.update_idle()
 
 class ThinkingPiece(Piece):
+    """
+    Essa peça, quando parada, fica fazendo movimentos
+    Pode piscar, mecher a cabeça (uma peça com TDAH)
+    """
     def __init__(self, x, y, kind, initial_direction="down"):
         super().__init__(x, y, kind, initial_direction)
         self.turning = False
@@ -220,6 +233,7 @@ class MovingPiece(Piece):
                     self.moving_forward = True
 
 class PieceAndante(Piece):
+    """Peça que anda de um lado para outro, ou de cima pra baixo"""
     def __init__(self, x, y, kind, initial_direction="left"):
         super().__init__(x, y, kind, initial_direction)
         if initial_direction in ("left", "right"):
@@ -258,6 +272,9 @@ class PieceAndante(Piece):
             self.animate_sprite()
 
 class ActivePiece(Piece):
+    """
+    Peças/personagens ativos, isto é, que são movimentados pelo teclado
+    """
     def update_position(self, speed):
         """Controla a posição com base nas teclas pressionadas."""
         self.moving = False

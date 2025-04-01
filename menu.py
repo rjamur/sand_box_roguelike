@@ -1,6 +1,8 @@
+"""Menu Principal"""
 from pygame import Rect
 
 class Button:
+    """Botões do Menu"""
     def __init__(self, x, y, width, height, text, callback):
         self.x = x
         self.y = y
@@ -10,6 +12,7 @@ class Button:
         self.callback = callback
 
     def draw(self, screen):
+        """Desenha os botões"""
         rect = Rect((self.x, self.y), (self.width, self.height))
         # O 'screen' será chamado diretamente dentro do método draw()
         screen.draw.filled_rect(rect, "darkblue")
@@ -26,6 +29,7 @@ class Button:
         return (self.x <= x <= self.x + self.width) and (self.y <= y <= self.y + self.height)
 
 class Menu:
+    """Estrutura do Menu, com os botões"""
     def __init__(self, music):
         self.active = True
         self.music_on = True
@@ -53,6 +57,8 @@ class Menu:
         self.buttons = [start_button, music_button, exit_button]
 
     def draw(self, screen):
+        """Função chamada no draw do main.py do PGZero
+            é chamada, portanto, constantemente (60x por segundo)"""
         # 'screen' é utilizado dentro desta função, que será chamada no loop principal
         screen.clear()
         screen.draw.text("Menu Principal", center=(400, 100), fontsize=50, color="yellow")
@@ -71,7 +77,7 @@ class Menu:
         self.active = False
 
     def toggle_music(self):
-        # Liga e desliga a música
+        """Liga e desliga a música"""
         self.music_on = not self.music_on
         if self.music_on:
             self.music.unpause()
@@ -81,5 +87,6 @@ class Menu:
             self.buttons[1].text = "Música e sons: desligados"
 
     def exit_game(self):
-        self.music.stop()  # Para a música ao sair do jogo
+        """Para a música ao sair do jogo"""
+        self.music.stop()
         exit()

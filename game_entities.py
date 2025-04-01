@@ -19,8 +19,9 @@ Player       NPC/Enemy     Equipable     Consumable
                         Weapon    Armor
 """
 
-# Classe base para tudo que existe no jogo.
+
 class Entity:
+    """Classe base para tudo que existe no jogo."""
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
@@ -31,17 +32,18 @@ class Entity:
         
         :param dt: Delta time (tempo decorrido) desde a última atualização.
         """
-        pass
 
     def draw(self):
         """
         Desenha a entidade na tela.
         """
-        pass
 
 
-# Classe base para personagens (personagens, inimigos, NPCs)
+
 class Character(Entity):
+    """
+    Classe base para personagens (personagens, inimigos, NPCs)
+    """
     def __init__(self, x: int, y: int, health: int = 100, speed: float = 1.0):
         super().__init__(x, y)
         self.health = health
@@ -60,11 +62,15 @@ class Character(Entity):
         
         :param target: Instância de Character que será atacada.
         """
-        pass  # Implementar lógica de ataque
+        # Implementar lógica de ataque
 
 
-# Personagem controlado pelo jogador
+
 class Player(Character):
+    """
+    Personagens do jogo
+    Controlados ou não pelo jodagor
+    """
     def __init__(self, x: int, y: int, health: int = 100, speed: float = 1.0):
         super().__init__(x, y, health, speed)
         self.inventory = []  # Lista para armazenar itens
@@ -75,8 +81,12 @@ class Player(Character):
         """
         self.inventory.append(item)
 
-# CLASSE: ActiveHero (Herói Ativo)
+
 class ActiveHero(Player):
+    """
+    Personagens controlados pelo jogador
+    Pelo teclado, ou pelo mouse
+    """
     def __init__(self, x: int, y: int, name: str = "Hero", initial_direction="down"):
         super().__init__(x, y, initial_direction)
         self.name = name
@@ -99,8 +109,9 @@ class ActiveHero(Player):
         # Chama o update da classe base para atualizar a animação e sincronizar a posição
         super().update(dt)
 
-# Personagens não jogáveis (inimigos ou NPCs)
+
 class NPC(Character):
+    """Personagens não jogáveis (inimigos ou NPCs)"""
     def __init__(self, x: int, y: int, health: int = 100, speed: float = 1.0):
         super().__init__(x, y, health, speed)
         self.dialogue = None  # Pode ser uma string ou objeto de diálogo
@@ -112,8 +123,9 @@ class NPC(Character):
         pass
 
 
-# Classe base para itens do jogo
+
 class Item(Entity):
+    """Classe base para itens do jogo"""
     def __init__(self, x: int, y: int):
         super().__init__(x, y)
 
@@ -129,8 +141,10 @@ class Item(Entity):
 
     Passo 3: No main.py, importe essas classes e utilize os métodos update() e draw() para refletir as mudanças em tela.
 """
-# Itens que podem ser equipados para melhorar atributos do personagem
 class Equipable(Item):
+    """
+    Itens que podem ser equipados para melhorar atributos do personagem
+    """
     def __init__(self, x: int, y: int):
         super().__init__(x, y)
         # Atributos de bônus, por exemplo, de ataque ou defesa.
@@ -138,8 +152,10 @@ class Equipable(Item):
         self.defense_bonus = 0
 
 
-# Itens consumíveis que podem ser usados uma vez
 class Consumable(Item):
+    """
+    Itens consumíveis que podem ser usados uma vez
+    """
     def __init__(self, x: int, y: int):
         super().__init__(x, y)
         self.healing_amount = 0  # Valor para cura, por exemplo
@@ -151,17 +167,21 @@ class Consumable(Item):
         # Exemplo: aumenta a saúde do target
         target.health += self.healing_amount
         # Talvez remover o item do inventário, etc.
-        pass
 
 
-# subclasses específicas de equipamentos:
 class Weapon(Equipable):
+    """
+    subclasses específicas de equipamentos:
+    """
     def __init__(self, x: int, y: int):
         super().__init__(x, y)
         self.attack_bonus = 10  # Exemplo de valor para ataque
 
 
 class Armor(Equipable):
+    """
+    Armaduras
+    """
     def __init__(self, x: int, y: int):
         super().__init__(x, y)
         self.defense_bonus = 5  # Exemplo de valor para defesa
