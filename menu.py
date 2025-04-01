@@ -26,11 +26,15 @@ class Button:
         return (self.x <= x <= self.x + self.width) and (self.y <= y <= self.y + self.height)
 
 class Menu:
-    def __init__(self):
+    def __init__(self, music):
         self.active = True
         self.music_on = True
         self.buttons = []
         self.initialize_buttons()
+        self.music = music
+
+        # Toca a música de fundo em loop
+        self.music.play('background.wav')  # 'background.ogg' deve estar na pasta 'music/'
 
     def initialize_buttons(self):
         button_width = 300
@@ -67,11 +71,15 @@ class Menu:
         self.active = False
 
     def toggle_music(self):
+        # Liga e desliga a música
         self.music_on = not self.music_on
         if self.music_on:
+            self.music.unpause()
             self.buttons[1].text = "Música e sons: ligados"
         else:
+            self.music.pause()
             self.buttons[1].text = "Música e sons: desligados"
 
     def exit_game(self):
+        self.music.stop()  # Para a música ao sair do jogo
         exit()

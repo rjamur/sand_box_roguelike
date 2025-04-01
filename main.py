@@ -11,13 +11,14 @@ from menu import Menu
 import config
 
 # Inicializa o menu
-menu = Menu()
+menu = Menu(music)
 
 game_active = False  # Variável para indicar que o jogo está ativo
 WIDTH = 800
 HEIGHT = 600
 TITLE = "Correr ou Lutar"
 config.current_fight = None
+#music.play('background')
 
 # -----------------------------
 # OBJECT INSTANCES
@@ -98,7 +99,7 @@ def draw():
         # Desenha o jogo principal
         
         # Informações na tela
-        screen.draw.text(f"Ativo: {active_piece.kind}", center=(400, 50), fontsize=30, color="yellow")
+        screen.draw.text(f"Ativo: {active_piece.kind} - TAB muda para outro - ESC para voltar", center=(400, 50), fontsize=30, color="yellow")
 
         # Desenha as peças ativas
         for piece in active_pieces:
