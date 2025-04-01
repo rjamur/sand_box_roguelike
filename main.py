@@ -1,10 +1,11 @@
-"""Módulo principal usado pelo PGZero
+#!/usr/bin/python
+"""
+    Módulo principal usado pelo PGZero
 
     Aqui as funções update() e draw() são executadas constantemente
     Cerca de 60x por segundo
 
 """
-#!/usr/bin/python
 import random
 import pgzrun
 
@@ -20,8 +21,8 @@ import config
 menu = Menu(music)
 
 game_active = False  # Variável para indicar que o jogo está ativo
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 1024
+HEIGHT = 768
 TITLE = "Correr ou Lutar"
 config.current_fight = None
 #music.play('background')
